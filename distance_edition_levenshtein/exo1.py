@@ -34,38 +34,73 @@ def levenshtein_table(word_1, word_2):
     return T
     
 def distance(word_1, word_2):
-    dist = 0
     tab = levenshtein_table(word_1, word_2)
     word_1_len = len(word_1)
     word_2_len = len(word_2)
-    i = word_1_len
-    j = word_2_len
+
+    return tab[word_1_len][word_2_len]
+
+print(distance("cellulaire", "automate"))
+
+def chemin(x, y):
+    T = levenshtein_table(x, y)
+    i, j = len(x), len(y)
+    path = []
     
-    
-
-    return dist
-
-print(distance("rame", "marin"))
-
-def chemin(word_1, word_2):
-    T = levenshtein_table(word_1, word_2)
-
-    return chemin_rec(word_1, word_2)
-
-def chemin_rec(word_1, word_2, T):
-    if word_1 == "" and word_2 == "":
-        return []
-    
-    if word_1 == "":
-        L = chemin_rec("", word_2[:-1], T)
-        L.append("-", word_2[-1])
+    while i > 0 or j > 0:
+        val_actuelle = T[i][j]
         
-        return L
-    
-    if word_2 == "":
-        L = chemin_rec(word_1[:-1], "-", T)
-        L.append(word_1[-1], "-")
+        val_diag = T[i-1][j-1] if (i > 0 and j > 0) else float('inf')
+        val_haut = T[i-1][j] if i > 0 else float('inf')
+        val_gauche = T[i][j-1] if j > 0 else float('inf')
+        
+        cout_subst = 0 if (i > 0 and j > 0 and x[i-1] == y[j-1]) else 1
+        
+        if i > 0 and j > 0 and val_actuelle == val_diag + cout_subst:
+            path.append((x[i-1], y[j-1]))
+            i -= 1
+            j -= 1
+        elif i > 0 and val_actuelle == val_haut + 1:
+            path.append((x[i-1], '-'))
+            i -= 1
+        else:
+            path.append(('-', y[j-1]))
+            j -= 1
+            
+    return path[::-1]
 
-        return L
+print(chemin("05122022", "01012023"))
+print(chemin("maison", "maçon"))
 
+def tous_chemins(x, y):
+    T = levenshtein_table(x, y)
+    solutions = []
     
+    def parcours(i, j, chemin_courant):
+        if i == 0 and j == 0:
+            solutions.append(chemin_courant[::-1])
+            return
+
+        val_actuelle = T[i][j]
+        cout_subst = 0 if (i > 0 and j > 0 and x[i-1] == y[j-1]) else 1
+        
+        if i > 0 and j > 0:
+            if val_actuelle == T[i-1][j-1] + cout_subst:
+                parcours(i-1, j-1, chemin_courant + [(x[i-1], y[j-1])])
+                
+        if i > 0:
+            if val_actuelle == T[i-1][j] + 1:
+                parcours(i-1, j, chemin_courant + [(x[i-1], '-')])
+                
+        if j > 0:
+            if val_actuelle == T[i][j-1] + 1:
+                parcours(i, j-1, chemin_courant + [('-', y[j-1])])
+
+    parcours(len(x), len(y), [])
+
+    return solutions
+    
+tous_les_chemins = tous_chemins("rame", "marin")
+
+for chemin in tous_les_chemins:
+    print(chemin)
